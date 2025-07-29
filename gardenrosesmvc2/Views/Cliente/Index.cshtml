@@ -1,0 +1,203 @@
+﻿@model List<gardenrosesmvc2.Models.Cliente>
+@{
+    ViewBag.Title = "Clientes";
+}
+
+<h2>Clientes</h2>
+
+<form id="clienteForm" onsubmit="return false;">
+    <input type="hidden" id="idCliente" />
+    <div class="form-group">
+        <label>Nombres</label>
+        <input type="text" id="nombres" class="form-control" required />
+    </div>
+    <div class="form-group">
+        <label>Apellidos</label>
+        <input type="text" id="apellidos" class="form-control" required />
+    </div>
+    <div class="form-group">
+        <label>Dirección</label>
+        <input type="text" id="direccion" class="form-control" required />
+    </div>
+    <div class="form-group">
+        <label>Teléfono</label>
+        <input type="text" id="telefono" class="form-control" required />
+    </div>
+    <div class="form-group">
+        <label>Correo</label>
+        <input type="email" id="correo" class="form-control" required />
+    </div>
+    <br />
+    <button class="btn btn-success" onclick="agregarCliente()">Agregar</button>
+    <button class="btn btn-primary" onclick="actualizarCliente()">Actualizar</button>
+</form>
+
+<br />
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Dirección</th>
+            <th>Teléfono</th>
+            <th>Correo</th>
+            <th>Acción</th>
+        </tr>
+    </thead>
+    <tbody id="tablaClientes">
+        @foreach (var c in Model)
+        {
+            <tr data-id="@c.idCliente">
+                <td>@c.nombres</td>
+                <td>@c.apellidos</td>
+                <td>@c.direccion</td>
+                <td>@c.telefono</td>
+                <td>@c.correo</td>
+                <td>
+                    <button class="btn btn-warning btn-sm" onclick="seleccionarCliente(this)">Seleccionar</button>
+                    <button class="btn btn-danger btn-sm" onclick="eliminarCliente(@c.idCliente)">Eliminar</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script>
+    function limpiarFormulario() {
+        document.getElementById("idCliente").value = "";
+        document.getElementById("nombres").value = "";
+        document.getElementById("apellidos").value = "";
+        document.getElementById("direccion").value = "";
+        document.getElementById("telefono").value = "";
+        document.getElementById("correo").value = "";
+    }
+
+    function seleccionarCliente(btn) {
+        var fila = btn.closest("tr");
+        document.getElementById("idCliente").value = fila.getAttribute("data-id");
+        document.getElementById("nombres").value = fila.cells[0].innerText;
+        document.getElementById("apellidos").value = fila.cells[1].innerText;
+        document.getElementById("direccion").value = fila.cells[2].innerText;
+        document.getElementById("telefono").value = fila.cells[3].innerText;
+        document.getElementById("correo").value = fila.cells[4].innerText;
+    }
+
+    async function agregarCliente() {
+        const cliente = obtenerClienteFormulario();
+
+        const res = await fetch('@Url.Action("Crear", "Cliente")', {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(cliente)
+        });
+
+        if (res.ok) {
+            alert("Cliente agregado correctamente");
+            agregarFilaATabla(cliente);
+            limpiarFormulario();
+        } else {
+            alert("Error al agregar cliente");
+        }
+    }
+
+    async function actualizarCliente() {
+        const cliente = obtenerClienteFormulario();
+
+        if (!cliente.idCliente) {
+            alert("Selecciona un cliente para actualizar");
+            return;
+        }
+
+        // Usamos POST para llamar al método Editar en el controller
+        const res = await fetch(`@Url.Action("Editar", "Cliente")`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(cliente)
+        });
+
+        if (res.ok) {
+            alert("Cliente actualizado correctamente");
+            actualizarFilaTabla(cliente);
+            limpiarFormulario();
+        } else {
+            alert("Error al actualizar cliente");
+        }
+    }
+
+async function eliminarCliente(id) {
+    if (!confirm("¿Está seguro de eliminar este cliente?")) return;
+
+    const res = await fetch(`@Url.Action("Eliminar", "Cliente")?id=${id}`, {
+        method: "POST"
+    });
+
+    if (res.ok) {
+        alert("Cliente eliminado correctamente");
+        eliminarFilaTabla(id);
+    } else {
+        alert("Error al eliminar cliente");
+    }
+}
+
+
+
+
+
+
+    function obtenerClienteFormulario() {
+        return {
+            idCliente: document.getElementById("idCliente").value,
+            nombres: document.getElementById("nombres").value,
+            apellidos: document.getElementById("apellidos").value,
+            direccion: document.getElementById("direccion").value,
+            telefono: document.getElementById("telefono").value,
+            correo: document.getElementById("correo").value
+        };
+    }
+
+    // Funciones para actualizar tabla dinámicamente sin recargar página
+
+    function agregarFilaATabla(cliente) {
+        const tbody = document.getElementById("tablaClientes");
+        const tr = document.createElement("tr");
+        tr.setAttribute("data-id", cliente.idCliente);
+
+        tr.innerHTML = `
+            <td>${cliente.nombres}</td>
+            <td>${cliente.apellidos}</td>
+            <td>${cliente.direccion}</td>
+            <td>${cliente.telefono}</td>
+            <td>${cliente.correo}</td>
+            <td>
+                <button class="btn btn-warning btn-sm" onclick="seleccionarCliente(this)">Seleccionar</button>
+                <button class="btn btn-danger btn-sm" onclick="eliminarCliente(${cliente.idCliente})">Eliminar</button>
+            </td>`;
+
+        tbody.appendChild(tr);
+    }
+
+    function actualizarFilaTabla(cliente) {
+        const filas = document.querySelectorAll(`#tablaClientes tr`);
+        filas.forEach(fila => {
+            if (fila.getAttribute("data-id") == cliente.idCliente) {
+                fila.cells[0].innerText = cliente.nombres;
+                fila.cells[1].innerText = cliente.apellidos;
+                fila.cells[2].innerText = cliente.direccion;
+                fila.cells[3].innerText = cliente.telefono;
+                fila.cells[4].innerText = cliente.correo;
+            }
+        });
+    }
+
+    function eliminarFilaTabla(id) {
+        const filas = document.querySelectorAll(`#tablaClientes tr`);
+        filas.forEach(fila => {
+            if (fila.getAttribute("data-id") == id) {
+                fila.remove();
+            }
+        });
+    }
+    </script>
+}

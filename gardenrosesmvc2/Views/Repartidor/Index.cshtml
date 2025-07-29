@@ -1,0 +1,162 @@
+﻿@model List<gardenrosesmvc2.Models.Repartidor>
+
+@{
+    ViewBag.Title = "Gestión de Repartidores";
+}
+
+<h2 class="text-primary">Gestión de Repartidores</h2>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <form id="formRepartidor">
+            <input type="hidden" id="idRepartidor" name="idRepartidor" />
+            <div class="form-group">
+                <label>Nombres:</label>
+                <input type="text" id="nombres" name="nombres" class="form-control" required />
+            </div>
+            <div class="form-group">
+                <label>Apellidos:</label>
+                <input type="text" id="apellidos" name="apellidos" class="form-control" required />
+            </div>
+            <div class="form-group">
+                <label>DNI:</label>
+                <input type="text" id="dni" name="dni" class="form-control" maxlength="8" required />
+            </div>
+            <div class="form-group">
+                <label>Celular:</label>
+                <input type="text" id="celular" name="celular" class="form-control" maxlength="9" required />
+            </div>
+            <div class="form-group">
+                <label>Licencia de Conducir:</label>
+                <input type="text" id="licenciaConducir" name="licenciaConducir" class="form-control" required />
+            </div>
+
+            <button type="button" class="btn btn-success" onclick="guardar()">Guardar</button>
+            <button type="button" class="btn btn-primary" onclick="actualizar()">Actualizar</button>
+            <button type="button" class="btn btn-secondary" onclick="limpiar()">Limpiar</button>
+        </form>
+    </div>
+</div>
+
+<hr />
+
+<table class="table table-bordered table-hover">
+    <thead class="thead-dark">
+        <tr>
+            <th>ID</th>
+            <th>Nombres</th>
+            <th>Apellidos</th>
+            <th>DNI</th>
+            <th>Celular</th>
+            <th>Licencia</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var r in Model)
+        {
+            <tr>
+                <td>@r.idRepartidor</td>
+                <td>@r.nombres</td>
+                <td>@r.apellidos</td>
+                <td>@r.dni</td>
+                <td>@r.celular</td>
+                <td>@r.licenciaConducir</td>
+                <td>
+                    <button class="btn btn-info btn-sm" onclick='seleccionar(@Html.Raw(Json.Encode(r)))'>Seleccionar</button>
+                    <button class="btn btn-danger btn-sm" onclick='eliminar(@r.idRepartidor)'>Eliminar</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section scripts {
+    <script>
+        function limpiar() {
+            document.getElementById("formRepartidor").reset();
+            document.getElementById("idRepartidor").value = "";
+        }
+
+        function guardar() {
+            const repartidor = {
+                nombres: document.getElementById("nombres").value,
+                apellidos: document.getElementById("apellidos").value,
+                dni: document.getElementById("dni").value,
+                celular: document.getElementById("celular").value,
+                licenciaConducir: document.getElementById("licenciaConducir").value
+            };
+
+            fetch('@Url.Action("Crear", "Repartidor")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(repartidor)
+            }).then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert("Error al guardar el repartidor.");
+                }
+            });
+        }
+
+        function actualizar() {
+            const repartidor = {
+                idRepartidor: document.getElementById("idRepartidor").value,
+                nombres: document.getElementById("nombres").value,
+                apellidos: document.getElementById("apellidos").value,
+                dni: document.getElementById("dni").value,
+                celular: document.getElementById("celular").value,
+                licenciaConducir: document.getElementById("licenciaConducir").value
+            };
+
+            if (!repartidor.idRepartidor) {
+                alert("Debe seleccionar un repartidor para actualizar.");
+                return;
+            }
+
+            fetch('@Url.Action("Editar", "Repartidor")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(repartidor)
+            }).then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert("Error al actualizar el repartidor.");
+                }
+            });
+        }
+
+        function seleccionar(repartidor) {
+            document.getElementById("idRepartidor").value = repartidor.idRepartidor;
+            document.getElementById("nombres").value = repartidor.nombres;
+            document.getElementById("apellidos").value = repartidor.apellidos;
+            document.getElementById("dni").value = repartidor.dni;
+            document.getElementById("celular").value = repartidor.celular;
+            document.getElementById("licenciaConducir").value = repartidor.licenciaConducir;
+        }
+
+        function eliminar(id) {
+            if (confirm("¿Seguro que deseas eliminar este repartidor?")) {
+                fetch('@Url.Action("Eliminar", "Repartidor")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ id: id })
+                }).then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert("Error al eliminar el repartidor.");
+                    }
+                });
+            }
+        }
+    </script>
+}

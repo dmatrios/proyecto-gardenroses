@@ -1,0 +1,157 @@
+﻿@model List<gardenrosesmvc2.Models.Pedido>
+
+@{
+    ViewBag.Title = "Gestión de Pedidos";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">Gestión de Pedidos</h2>
+
+    <form id="formularioPedido" class="border p-4 rounded shadow-sm bg-light">
+        <input type="hidden" id="idPedido" name="IdPedido" />
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="idCliente" class="form-label">Cliente</label>
+                <input type="text" class="form-control" id="idCliente" name="IdCliente" required>
+            </div>
+            <div class="col-md-6">
+                <label for="idRepartidor" class="form-label">Repartidor</label>
+                <input type="text" class="form-control" id="idRepartidor" name="IdRepartidor" required>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="fechaPedido" class="form-label">Fecha Pedido</label>
+                <input type="date" class="form-control" id="fechaPedido" name="FechaPedido" required>
+            </div>
+            <div class="col-md-6">
+                <label for="fechaEntrega" class="form-label">Fecha Entrega</label>
+                <input type="date" class="form-control" id="fechaEntrega" name="FechaEntrega" required>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="direccionEntrega" class="form-label">Dirección de Entrega</label>
+            <input type="text" class="form-control" id="direccionEntrega" name="DireccionEntrega" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="estado" class="form-label">Estado</label>
+            <input type="text" class="form-control" id="estado" name="Estado" required>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-success" onclick="crearPedido()">Registrar</button>
+            <button type="button" class="btn btn-primary" onclick="editarPedido()">Actualizar</button>
+        </div>
+    </form>
+
+    <hr class="my-4" />
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover table-striped text-center align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th>Fecha Pedido</th>
+                    <th>Fecha Entrega</th>
+                    <th>Dirección</th>
+                    <th>Estado</th>
+                    <th>Repartidor</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var pedido in Model)
+                {
+                    <tr>
+                        <td>@pedido.IdPedido</td>
+                        <td>@pedido.IdCliente</td>
+                        <td>@pedido.FechaPedido.ToString("yyyy-MM-dd")</td>
+                        <td>@pedido.FechaEntrega.ToString("yyyy-MM-dd")</td>
+                        <td>@pedido.DireccionEntrega</td>
+                        <td>@pedido.Estado</td>
+                        <td>@pedido.IdRepartidor</td>
+                        <td>
+                            <div class="d-flex flex-column gap-1">
+                                <button class="btn btn-warning btn-sm" onclick="seleccionar(
+                                    '@pedido.IdPedido',
+                                    '@pedido.IdCliente',
+                                    '@pedido.FechaPedido.ToString("yyyy-MM-dd")',
+                                    '@pedido.FechaEntrega.ToString("yyyy-MM-dd")',
+                                    '@pedido.DireccionEntrega',
+                                    '@pedido.Estado',
+                                    '@pedido.IdRepartidor')">
+                                    Seleccionar
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="eliminarPedido(@pedido.IdPedido)">
+                                    Eliminar
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        function seleccionar(id, cliente, fechaPedido, fechaEntrega, direccion, estado, repartidor) {
+            document.getElementById("idPedido").value = id;
+            document.getElementById("idCliente").value = cliente;
+            document.getElementById("fechaPedido").value = fechaPedido;
+            document.getElementById("fechaEntrega").value = fechaEntrega;
+            document.getElementById("direccionEntrega").value = direccion;
+            document.getElementById("estado").value = estado;
+            document.getElementById("idRepartidor").value = repartidor;
+        }
+
+        async function crearPedido() {
+            const datos = obtenerDatosFormulario();
+            const response = await fetch("/Pedido/Crear", {
+                method: "POST",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datos)
+            });
+            location.reload();
+        }
+
+        async function editarPedido() {
+            const datos = obtenerDatosFormulario();
+            const response = await fetch("/Pedido/Editar", {
+                method: "POST",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datos)
+            });
+            location.reload();
+        }
+
+        async function eliminarPedido(id) {
+            if (!confirm("¿Seguro de eliminar este pedido?")) return;
+
+            const response = await fetch("/Pedido/Eliminar", {
+                method: "POST",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id })
+            });
+            location.reload();
+        }
+
+        function obtenerDatosFormulario() {
+            return {
+                IdPedido: parseInt(document.getElementById("idPedido").value) || 0,
+                IdCliente: document.getElementById("idCliente").value,
+                FechaPedido: document.getElementById("fechaPedido").value,
+                FechaEntrega: document.getElementById("fechaEntrega").value,
+                DireccionEntrega: document.getElementById("direccionEntrega").value,
+                Estado: document.getElementById("estado").value,
+                IdRepartidor: document.getElementById("idRepartidor").value
+            };
+        }
+    </script>
+}
